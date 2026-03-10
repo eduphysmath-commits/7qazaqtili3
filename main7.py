@@ -42,6 +42,7 @@ def main():
         .main-title { color: #2c3e50; text-align: center; font-weight: 800; padding: 20px; border-bottom: 3px solid #e74c3c; }
         .search-section { background-color: #e3f2fd; padding: 25px; border-radius: 15px; border: 2px dashed #1e88e5; margin-top: 50px; }
         .camera-box { background-color: #fff9c4; padding: 20px; border-radius: 10px; border: 2px dashed #fbc02d; margin-bottom: 20px; }
+        .instruction-text { color: #d35400; text-align: center; font-size: 1.1em; font-weight: bold; margin-bottom: 10px; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -73,12 +74,16 @@ def main():
             tab1, tab2 = st.tabs(["📂 Дайын суретті жүктеу (Ұсынылады)", "📸 Камерамен түсіру"])
             
             with tab1:
-                # ӨЗГЕРІС: accept_multiple_files=True қосылды
-                uploaded_files = st.file_uploader("Телефоннан немесе компьютерден жұмыстың барлық беттерін бірден таңдаңыз", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key=f"upload_{st.session_state.cam_key}")
+                # Батырманың үстіне үлкен нұсқаулық шығару
+                st.markdown("<div class='instruction-text'>📸 Суретке түсіру немесе галереядан таңдау үшін төмендегі «Browse files» батырмасын басыңыз 👇</div>", unsafe_allow_html=True)
+                
+                # Жүктеушінің өз жазуын ("Телефоннан немесе...") алып тастап, бос орын қалдырдық
+                uploaded_files = st.file_uploader("", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key=f"upload_{st.session_state.cam_key}")
+                
                 if uploaded_files:
                     st.success(f"📂 {len(uploaded_files)} файл таңдалды.")
                     if st.button("➕ Таңдалған барлық файлды тіркеу", use_container_width=True, key="btn_upload"):
-                        # Файлдарды атауы бойынша реттеп алу (шатасып кетпеуі үшін)
+                        # Файлдарды атауы бойынша реттеп алу
                         sorted_files = sorted(uploaded_files, key=lambda x: x.name)
                         for file in sorted_files:
                             st.session_state.photos.append(file.getvalue())
@@ -103,7 +108,6 @@ def main():
                     with cols[i % 4]:
                         st.image(photo_bytes, caption=f"{i+1}-бет", use_container_width=True)
                         
-                        # ӨЗГЕРІС: Жылжыту және өшіру батырмалары
                         btn_cols = st.columns(3)
                         with btn_cols[0]:
                             if i > 0:
