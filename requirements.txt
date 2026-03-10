@@ -1,2 +1,5 @@
 streamlit
 requests
+Pillow
+python-dotenv
+groq
