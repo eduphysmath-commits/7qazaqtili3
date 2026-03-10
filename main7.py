@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import streamlit.components.v1 as components
 import json
 import os
 import time
@@ -39,8 +38,6 @@ def main():
     # 2. СТИЛЬ (Дизайн)
     st.markdown("""
         <style>
-        body { -webkit-user-select: none; user-select: none; }
-        input, textarea { -webkit-user-select: text !important; user-select: text !important; }
         .stApp { background-color: #f0f2f6; }
         .main-title { color: #2c3e50; text-align: center; font-weight: 800; padding: 20px; border-bottom: 3px solid #e74c3c; }
         .search-section { background-color: #e3f2fd; padding: 25px; border-radius: 15px; border: 2px dashed #1e88e5; margin-top: 50px; }
@@ -70,58 +67,6 @@ def main():
             s_class = st.selectbox("🏫 Сыныбыңыз:", ["7-A", "7-B", "7-C", "7-D", "7-F", "7-G", "7-H", "7-K", "7-L", "7-M", "7-P CL", "7-Q CL"])
 
         if name:
-            # 🛡️ АҚЫЛДЫ АНТИ-ЧИТ ЖҮЙЕСІ (3 ескерту + қорғаныс)
-            components.html(f"""
-                <script>
-                // Оң жақ батырманы (Right-click) және көшіруді бұғаттау
-                document.addEventListener('contextmenu', event => event.preventDefault());
-                document.addEventListener('keydown', function(e) {{
-                    if (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'p' || e.key === 'u' || e.key === 's')) {{
-                        e.preventDefault();
-                    }}
-                }});
-
-                // Ескертулер санын сақтау (Оқушы қайта кірсе де сақталады)
-                let cheatCount = sessionStorage.getItem('cheatCount_{name}') || 0;
-                cheatCount = parseInt(cheatCount);
-                let isSubmitting = false;
-
-                // Басқа терезеге өтуді қадағалау
-                document.addEventListener("visibilitychange", function() {{
-                    if (document.hidden && !isSubmitting) {{
-                        cheatCount++;
-                        sessionStorage.setItem('cheatCount_{name}', cheatCount);
-
-                        if (cheatCount < 3) {{
-                            // Жай ғана ескерту береміз (1 немесе 2-ші рет)
-                            alert("⚠️ АНТИ-ЧИТ ЕСКЕРТУІ (" + cheatCount + "/3):\\n\\nҚұрметті оқушы, тест кезінде басқа терезеге өтуге немесе хабарлама оқуға қатаң тыйым салынады! Егер 3 рет қайталанса, жұмысыңыз автоматты түрде жойылады.");
-                        }} else {{
-                            // 3 рет бұзды - жұмысты біржолата бұғаттау
-                            alert("🚫 ЕРЕЖЕ ӨРЕСКЕЛ БҰЗЫЛДЫ:\\n\\nСіз 3 рет басқа терезеге өттіңіз. Жұмысыңыз нөлденді және мұғалімге хабарланды.");
-                            
-                            const payload = {{
-                                student_name: "{name}",
-                                student_class: "{s_class}",
-                                status: "cheated",
-                                answers: {{ "lang": "kz" }},
-                                ai_feedback: "🚫 ЖҰМЫС ЖОЙЫЛДЫ: Оқушы тест барысында басқа терезеге 3 реттен артық өтіп, ережені өрескел бұзды."
-                            }};
-                            
-                            fetch('{URL}/rest/v1/{TABLE_NAME}', {{
-                                method: 'POST',
-                                headers: {{ 'apikey': '{KEY}', 'Authorization': 'Bearer {KEY}', 'Content-Type': 'application/json' }},
-                                body: JSON.stringify(payload)
-                            }}).then(() => {{ 
-                                isSubmitting = true;
-                                sessionStorage.removeItem('cheatCount_{name}'); // Келесі тестке тазалау үшін
-                                window.parent.location.reload(); 
-                            }});
-                        }}
-                    }}
-                }});
-                </script>
-            """, height=0)
-
             st.markdown("<div class='camera-box'><b>📸 Жұмысты суретке түсіру немесе жүктеу:</b></div>", unsafe_allow_html=True)
             
             # Екі бөлек қойынды (вкладка)
@@ -228,9 +173,7 @@ def main():
                 for data in results:
                     with st.container():
                         st.markdown(f"#### 👤 {data['student_name']} ({data['student_class']})")
-                        if data['status'] == 'cheated':
-                            st.error("🚫 Жұмыс жойылды: Анти-чит жүйесі іске қосылған.")
-                        elif data['status'] == 'pending':
+                        if data['status'] == 'pending':
                             st.warning("⏳ Мұғалім (AI) әлі тексеріп жатыр. Сәл күте тұрыңыз...")
                         else:
                             col_score, col_fb = st.columns([1, 3])
