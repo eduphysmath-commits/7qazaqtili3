@@ -57,7 +57,7 @@ def main():
             st.session_state.cam_key += 1
             st.rerun()
     else:
-        st.info("📝 **Нұсқаулық:** Жұмысыңыз бірнеше беттен тұрса, әр бетті жеке түсіріп немесе жүктеп, «Тізімге қосу» батырмасын басыңыз. Соңында «Тапсыру» батырмасын басыңыз.")
+        st.info("📝 **Нұсқаулық:** Жұмысыңыз бірнеше беттен тұрса, барлық бетті бірден таңдап немесе кезекпен түсіріп тіркеңіз. Беттердің ретін (1, 2, 3) төмендегі батырмалармен дұрыстай аласыз. Соңында «Тапсыру» батырмасын басыңыз.")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -73,10 +73,15 @@ def main():
             tab1, tab2 = st.tabs(["📂 Дайын суретті жүктеу (Ұсынылады)", "📸 Камерамен түсіру"])
             
             with tab1:
-                uploaded_file = st.file_uploader("Телефоннан немесе компьютерден анық суретті таңдаңыз", type=["jpg", "jpeg", "png"], key=f"upload_{st.session_state.cam_key}")
-                if uploaded_file:
-                    if st.button("➕ Осы файлды жұмысқа тіркеу", use_container_width=True, key="btn_upload"):
-                        st.session_state.photos.append(uploaded_file.getvalue())
+                # ӨЗГЕРІС: accept_multiple_files=True қосылды
+                uploaded_files = st.file_uploader("Телефоннан немесе компьютерден жұмыстың барлық беттерін бірден таңдаңыз", type=["jpg", "jpeg", "png"], accept_multiple_files=True, key=f"upload_{st.session_state.cam_key}")
+                if uploaded_files:
+                    st.success(f"📂 {len(uploaded_files)} файл таңдалды.")
+                    if st.button("➕ Таңдалған барлық файлды тіркеу", use_container_width=True, key="btn_upload"):
+                        # Файлдарды атауы бойынша реттеп алу (шатасып кетпеуі үшін)
+                        sorted_files = sorted(uploaded_files, key=lambda x: x.name)
+                        for file in sorted_files:
+                            st.session_state.photos.append(file.getvalue())
                         st.session_state.cam_key += 1
                         st.rerun()
 
@@ -88,7 +93,7 @@ def main():
                         st.session_state.cam_key += 1 
                         st.rerun() 
 
-            # ТҮСІРІЛГЕН СУРЕТТЕРДІ КӨРСЕТУ ЖӘНЕ ЖОЮ
+            # ТҮСІРІЛГЕН СУРЕТТЕРДІ КӨРСЕТУ, ЖОЮ ЖӘНЕ ОРНЫН АУЫСТЫРУ
             if st.session_state.photos:
                 st.write("---")
                 st.markdown(f"**Сіздің жұмысыңыз ({len(st.session_state.photos)} бет):**")
@@ -97,10 +102,25 @@ def main():
                 for i, photo_bytes in enumerate(st.session_state.photos):
                     with cols[i % 4]:
                         st.image(photo_bytes, caption=f"{i+1}-бет", use_container_width=True)
-                        if st.button(f"🗑️ Өшіру", key=f"delete_{i}"):
-                            st.session_state.photos.pop(i)
-                            st.rerun()
+                        
+                        # ӨЗГЕРІС: Жылжыту және өшіру батырмалары
+                        btn_cols = st.columns(3)
+                        with btn_cols[0]:
+                            if i > 0:
+                                if st.button("⬅️", key=f"left_{i}", help="Алдыңғы бетке жылжыту"):
+                                    st.session_state.photos[i], st.session_state.photos[i-1] = st.session_state.photos[i-1], st.session_state.photos[i]
+                                    st.rerun()
+                        with btn_cols[1]:
+                            if st.button("🗑️", key=f"delete_{i}", help="Осы бетті өшіру"):
+                                st.session_state.photos.pop(i)
+                                st.rerun()
+                        with btn_cols[2]:
+                            if i < len(st.session_state.photos) - 1:
+                                if st.button("➡️", key=f"right_{i}", help="Келесі бетке жылжыту"):
+                                    st.session_state.photos[i], st.session_state.photos[i+1] = st.session_state.photos[i+1], st.session_state.photos[i]
+                                    st.rerun()
                 
+                st.write("")
                 if st.button("❌ Барлығын қайтадан бастау (Суреттерді өшіру)"):
                     st.session_state.photos = []
                     st.session_state.cam_key += 1
